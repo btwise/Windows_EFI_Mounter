@@ -1,5 +1,4 @@
 import os
-from os import kill
 import sys
 import ctypes
 import tkinter as tk
