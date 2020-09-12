@@ -32,7 +32,7 @@ class root(tk.Tk):
         return real_path
 
     def execCmd(self, cmd):
-        r = os.popen(cmd, close_fds=True)
+        r = os.popen(cmd)
         text = r.read()
         r.close()
         return text
