@@ -12,7 +12,6 @@ class root(tk.Tk):
         super().__init__()
         self.title("EFI Mounter")
         diskinfo = self.list_disk()
-
         self.label_str = tk.StringVar()
         self.label_str.set(diskinfo[6])
         self.label_frame = tk.Frame(self)
@@ -28,8 +27,12 @@ class root(tk.Tk):
         self.button.pack()
         self.mainloop()
 
+    def get_path(self, filename):
+        real_path = base_path + '\\' + os.path.basename(filename)
+        return real_path
+
     def execCmd(self, cmd):
-        r = os.popen(cmd)
+        r = os.popen(cmd, close_fds=True)
         text = r.read()
         r.close()
         return text
@@ -41,11 +44,11 @@ class root(tk.Tk):
 
     def list_disk(self):
         self.command = "list disk"
-        if not os.path.exists("tmp.txt"):
-            with open("tmp.txt", 'w') as f:
+        if not os.path.exists(self.get_path("tmp.txt")):
+            with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
-            result = self.execCmd("diskpart /s tmp.txt")
-            os.system("del tmp.txt")
+            result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
+            os.system("del %s" % self.get_path("tmp.txt"))
         else:
             print(
                 "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
@@ -55,11 +58,11 @@ class root(tk.Tk):
 
     def list_part(self):
         self.command = "sel disk %d\nlist part" % self.sel_disk
-        if not os.path.exists("tmp.txt"):
-            with open("tmp.txt", 'w') as f:
+        if not os.path.exists(self.get_path("tmp.txt")):
+            with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
-            result = self.execCmd("diskpart /s tmp.txt")
-            os.system("del tmp.txt")
+            result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
+            os.system("del %s" % self.get_path("tmp.txt"))
         else:
             print(
                 "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
@@ -73,11 +76,11 @@ class root(tk.Tk):
         set id=ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
         assign letter=z
         """ % (self.sel_disk, self.sel_part)
-        if not os.path.exists("tmp.txt"):
-            with open("tmp.txt", 'w') as f:
+        if not os.path.exists(self.get_path("tmp.txt")):
+            with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
-            result = self.execCmd("diskpart /s tmp.txt")
-            os.system("del tmp.txt")
+            result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
+            os.system("del %s" % self.get_path("tmp.txt"))
         else:
             print(
                 "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
@@ -87,17 +90,23 @@ class root(tk.Tk):
         return result
 
     def unmount(self):
-        self.sel_part = self.listbox.curselection()[0] + 1
+        try:
+            self.sel_part = self.listbox.curselection()[0] + 1
+        except IndexError:
+            self.step = 1
+            tkMessage.showerror(
+                "Error", "You haven't select anything yet.\n您还没有选择分区")
+            return
         self.command = """sel disk %d
         sel part %d
         remove letter z
         set id=c12a7328-f81f-11d2-ba4b-00a0c93ec93b override
         """ % (self.sel_disk, self.sel_part)
-        if not os.path.exists("tmp.txt"):
-            with open("tmp.txt", 'w') as f:
+        if not os.path.exists(self.get_path("tmp.txt")):
+            with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
-            result = self.execCmd("diskpart /s tmp.txt")
-            os.system("del tmp.txt")
+            result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
+            os.system("del %s" % self.get_path("tmp.txt"))
         else:
             print(
                 "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
@@ -109,7 +118,13 @@ class root(tk.Tk):
     def onClick(self):
         self.step += 1
         if self.step == 1:
-            self.sel_disk = self.listbox.curselection()[0]
+            try:
+                self.sel_disk = self.listbox.curselection()[0]
+            except IndexError:
+                self.step = 0
+                tkMessage.showerror(
+                    "Error", "You haven't select anything yet.\n您还没有选择磁盘")
+                return
             part_info = self.list_part()
             self.label_str.set(part_info[8][2:])
             self.listbox.delete(0, "end")
@@ -120,7 +135,13 @@ class root(tk.Tk):
                 self, text="Unmount", command=self.unmount)
             self.unmount_btn.pack()
         if self.step >= 2:
-            self.sel_part = self.listbox.curselection()[0] + 1
+            try:
+                self.sel_part = self.listbox.curselection()[0] + 1
+            except IndexError:
+                self.step = 1
+                tkMessage.showerror(
+                    "Error", "You haven't select anything yet.\n您还没有选择分区")
+                return
             result = self.mount_part()
             tkMessage.showinfo(
                 title="Result", message=result[10]+'\n'+result[12])
@@ -135,7 +156,13 @@ if __name__ == "__main__":
             return ctypes.windll.shell32.IsUserAnAdmin()
         except:
             return False
-    if is_admin():
+
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+        app = root()
+
+    elif is_admin():
+        base_path = os.path.dirname(__file__)
         app = root()
 
     else:
