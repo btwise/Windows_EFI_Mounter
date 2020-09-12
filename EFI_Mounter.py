@@ -37,10 +37,15 @@ class root(tk.Tk):
         r.close()
         return text
 
+    '''
     def relaunch_explorer(self):
         kill_cmd = "taskkill /F /IM explorer.exe"
         os.system(kill_cmd)
-        os.startfile("explorer.exe")
+        # ctypes.windll.shell32.ShellExecuteW(
+        #    None, "runas", sys.executable, "explorer.exe", None, 1)
+        os.system(
+            r'Powershell -Command "& { Start-Process \"explorer.exe\" -Verb RunAs }" ')
+    '''
 
     def list_disk(self):
         self.command = "list disk"
@@ -48,10 +53,10 @@ class root(tk.Tk):
             with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
             result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
-            os.system("del %s" % self.get_path("tmp.txt"))
+            os.system("del \"%s\"" % self.get_path("tmp.txt"))
         else:
-            print(
-                "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
+            tkMessage.showerror(
+                message="tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
             exit(1)
         result = result.splitlines()
         return result
@@ -62,10 +67,10 @@ class root(tk.Tk):
             with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
             result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
-            os.system("del %s" % self.get_path("tmp.txt"))
+            os.system("del \"%s\"" % self.get_path("tmp.txt"))
         else:
-            print(
-                "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
+            tkMessage.showerror(
+                message="tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
             exit(1)
         result = result.splitlines()
         return result
@@ -80,13 +85,13 @@ class root(tk.Tk):
             with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
             result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
-            os.system("del %s" % self.get_path("tmp.txt"))
+            os.system("del \"%s\"" % self.get_path("tmp.txt"))
         else:
-            print(
-                "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
+            tkMessage.showerror(
+                message="tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
             exit(1)
         result = result.splitlines()
-        self.relaunch_explorer()
+        # self.relaunch_explorer()
         return result
 
     def unmount(self):
@@ -106,10 +111,10 @@ class root(tk.Tk):
             with open(self.get_path("tmp.txt"), 'w') as f:
                 f.write(self.command)
             result = self.execCmd("diskpart /s %s" % self.get_path("tmp.txt"))
-            os.system("del %s" % self.get_path("tmp.txt"))
+            os.system("del \"%s\"" % self.get_path("tmp.txt"))
         else:
-            print(
-                "tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
+            tkMessage.showerror(
+                message="tmp.txt exists, aborted! Please consider rename tmp.txt to something else.")
             exit(1)
         result = result.splitlines()
         tkMessage.showinfo(
